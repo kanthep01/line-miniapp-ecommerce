@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ทดสอบการเชื่อมต่อ Google Sheets API</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 { color: #333; margin-bottom: 10px; font-size: 28px; }
+        .subtitle { color: #666; margin-bottom: 30px; font-size: 14px; }
+        .info-box {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+        button {
+            background: #06C755;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+        }
+        button:hover { background: #00B900; }
+        .result { margin-top: 30px; padding: 20px; border-radius: 10px; display: none; }
+        .result.success { background: #d4edda; border: 2px solid #28a745; display: block; }
+        .result.error { background: #f8d7da; border: 2px solid #dc3545; display: block; }
+        code {
+            background: #f8f9fa;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 ทดสอบการเชื่อมต่อ Google Sheets API</h1>
+        <p class="subtitle">ตรวจสอบว่า API Key และ Google Sheet ทำงานถูกต้อง</p>
+        <div class="info-box">
+            <strong>📊 ข้อมูลทดสอบ:</strong><br>
+            • Sheet ID: <code>1PC-SmUUHBCB4VXIKi3LCroUQEE6sJQG_sO54fNvpqoA</code><br>
+            • Sheet Name: <code>ntshop list</code>
+        </div>
+        <button onclick="testConnection()">🚀 ทดสอบ</button>
+        <div id="result" class="result"></div>
+    </div>
+    <script>
+        const SHEET_ID = '1PC-SmUUHBCB4VXIKi3LCroUQEE6sJQG_sO54fNvpqoA';
+        const API_KEY = 'AIzaSyBuBES7W1M-aWW2MR3okOyEJPV9VBitkrs';
+        const SHEET_NAME = 'ntshop list';
+        
+        async function testConnection() {
+            const result = document.getElementById('result');
+            result.innerHTML = 'กำลังทดสอบ...';
+            result.className = 'result';
+            result.style.display = 'block';
+            
+            try {
+                if (window.location.protocol === 'file:') {
+                    throw new Error('❌ ต้องเปิดผ่าน web server! (python -m http.server 8000)');
+                }
+                
+                const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}?key=${API_KEY}`;
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(`HTTP ${response.status}: ${error.error?.message || 'Unknown'}`);
+                }
+                
+                const data = await response.json();
+                const rows = data.values || [];
+                
+                result.className = 'result success';
+                result.innerHTML = `
+                    <h3>✅ เชื่อมต่อสำเร็จ!</h3>
+                    <p>จำนวนแถว: ${rows.length}</p>
+                    <p>จำนวนสินค้า: ${rows.length - 1}</p>
+                    <pre>${JSON.stringify(rows.slice(0,2), null, 2)}</pre>
+                `;
+            } catch (error) {
+                result.className = 'result error';
+                result.innerHTML = `<h3>❌ Error</h3><p>${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
